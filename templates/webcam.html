@@ -1,110 +1,329 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Webcam Detection 🎥</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<title>WEBCAM DETECTION</title>
+    body {
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #c8f0fe 0%, #d4f5d4 50%, #ffd6e7 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 16px 60px;
+    }
 
-<style>
+    .back-link {
+      align-self: flex-start;
+      text-decoration: none;
+      color: #2eb5c9;
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 24px;
+      transition: transform 0.15s;
+    }
+    .back-link:hover { transform: translateX(-4px); }
 
-body{
-text-align:center;
-font-family:Arial;
-margin-top:40px;
-}
+    h1 {
+      font-size: 2.4rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, #2eb5c9, #4ecdc4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+      text-align: center;
+    }
 
-#counts{
-font-size:25px;
-font-weight:bold;
-margin-top:20px;
-}
+    .subtitle {
+      color: #5a8a99;
+      margin-bottom: 28px;
+      font-size: 0.95rem;
+      text-align: center;
+    }
 
-</style>
+    /* Layout: side-by-side on wide screens, stacked on mobile */
+    .feed-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 1040px;
+    }
 
+    .feed-card {
+      flex: 1 1 440px;
+      max-width: 500px;
+      background: rgba(255,255,255,0.68);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 2px solid rgba(255,255,255,0.85);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 8px 28px rgba(46,181,201,0.18);
+    }
+
+    .feed-label {
+      padding: 12px 20px;
+      font-weight: 900;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feed-label.cam { background: linear-gradient(90deg, #e0f8ff, #c8f0fe); color: #2a7a8a; }
+    .feed-label.det { background: linear-gradient(90deg, #ffe0f5, #ffd6e7); color: #9a2a6a; }
+
+    .feed-card video,
+    .feed-card img {
+      width: 100%;
+      display: block;
+      min-height: 200px;
+      background: #e8f8ff;
+      object-fit: cover;
+    }
+
+    /* Status bar */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.5);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #4a8a9a;
+      border-top: 1px solid rgba(200,240,254,0.8);
+      min-height: 42px;
+    }
+
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #ccc;
+      flex-shrink: 0;
+    }
+    .dot.live { background: #4ecdc4; animation: pulse 1s ease-in-out infinite; }
+    .dot.idle { background: #ff79c6; }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(78,205,196,0.6); }
+      50%        { box-shadow: 0 0 0 6px rgba(78,205,196,0); }
+    }
+
+    /* Start button */
+    .btn-start {
+      margin-top: 20px;
+      padding: 16px 48px;
+      font-size: 1.05rem;
+      font-weight: 900;
+      font-family: 'Nunito', sans-serif;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #4ecdc4, #2eb5c9);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(46,181,201,0.4);
+      transition: transform 0.18s, box-shadow 0.18s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-start:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 10px 28px rgba(46,181,201,0.55); }
+    .btn-start:active { transform: scale(0.97); }
+    .btn-start:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+    /* Counts */
+    .counts-title {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: #1e7a8a;
+      margin-top: 28px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .counts-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      max-width: 1040px;
+      width: 100%;
+    }
+
+    .count-badge {
+      background: linear-gradient(135deg, #e0f8ff, #c8f0fe);
+      border: 2px solid #86d8e8;
+      border-radius: 50px;
+      padding: 8px 20px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #1e7a8a;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(46,181,201,0.15);
+    }
+
+    .count-badge .num {
+      background: linear-gradient(135deg, #4ecdc4, #2eb5c9);
+      color: #fff;
+      border-radius: 50px;
+      padding: 2px 10px;
+      font-size: 0.88rem;
+    }
+
+    .count-badge::before { content: attr(data-emoji); font-size: 1.1rem; }
+  </style>
 </head>
-
 <body>
 
-<h1>WEBCAM</h1>
+  <a href="/" class="back-link">← Back home</a>
 
-<video id="webcam" width="500" autoplay></video>
+  <h1>🎥 Live Webcam</h1>
+  <p class="subtitle">Start your camera and I'll keep counting objects in real time! ✨</p>
 
-<br><br>
+  <button class="btn-start" onclick="startWebcam()" id="startBtn">🟢 Start Webcam</button>
 
-<button onclick="startWebcam()">START</button>
+  <br /><br />
 
-<br><br>
+  <div class="feed-row">
+    <!-- Raw webcam feed -->
+    <div class="feed-card">
+      <div class="feed-label cam">📷 Your Camera</div>
+      <video id="webcam" autoplay playsinline muted></video>
+      <div class="status-bar">
+        <div class="dot" id="camDot"></div>
+        <span id="camStatus">Waiting to start…</span>
+      </div>
+    </div>
 
-<img id="resultImage" width="500">
+    <!-- Annotated detection result -->
+    <div class="feed-card">
+      <div class="feed-label det">🔍 Detection Result</div>
+      <img id="resultImage" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Detection result" />
+      <div class="status-bar">
+        <div class="dot idle" id="detDot"></div>
+        <span id="detStatus">No frame yet</span>
+      </div>
+    </div>
+  </div>
 
-<div id="counts"></div>
+  <p class="counts-title" id="countsTitle" style="display:none;">🎯 Objects detected:</p>
+  <div class="counts-grid" id="counts"></div>
 
-<script>
+  <script>
+    const EMOJI_MAP = {
+      person:'🧍', bicycle:'🚲', car:'🚗', motorcycle:'🏍️', airplane:'✈️',
+      bus:'🚌', train:'🚆', truck:'🚛', boat:'⛵', 'traffic light':'🚦',
+      'fire hydrant':'🚒', 'stop sign':'🛑', 'parking meter':'🅿️', bench:'🪑',
+      bird:'🐦', cat:'🐱', dog:'🐶', horse:'🐴', sheep:'🐑', cow:'🐄',
+      elephant:'🐘', bear:'🐻', zebra:'🦓', giraffe:'🦒', backpack:'🎒',
+      umbrella:'☂️', handbag:'👜', tie:'👔', suitcase:'🧳', frisbee:'🥏',
+      skis:'🎿', snowboard:'🏂', 'sports ball':'⚽', kite:'🪁',
+      'baseball bat':'⚾', 'baseball glove':'🧤', skateboard:'🛹', surfboard:'🏄',
+      'tennis racket':'🎾', bottle:'🍾', 'wine glass':'🍷', cup:'☕',
+      fork:'🍴', knife:'🔪', spoon:'🥄', bowl:'🥣', banana:'🍌', apple:'🍎',
+      sandwich:'🥪', orange:'🍊', broccoli:'🥦', carrot:'🥕', 'hot dog':'🌭',
+      pizza:'🍕', donut:'🍩', cake:'🎂', chair:'🪑', couch:'🛋️',
+      'potted plant':'🪴', bed:'🛏️', 'dining table':'🍽️', toilet:'🚽',
+      tv:'📺', laptop:'💻', mouse:'🖱️', remote:'📻', keyboard:'⌨️',
+      'cell phone':'📱', microwave:'📦', oven:'🍳', toaster:'🍞', sink:'🚿',
+      refrigerator:'🧊', book:'📚', clock:'🕐', vase:'🏺', scissors:'✂️',
+      'teddy bear':'🧸', 'hair drier':'💨', toothbrush:'🪥'
+    };
+    function emojiFor(name){ return EMOJI_MAP[name.toLowerCase()] || '📦'; }
 
-const video=document.getElementById("webcam")
+    const video = document.getElementById('webcam');
+    let running = false;
 
-async function startWebcam(){
+    async function startWebcam(){
+      if(running) return;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        running = true;
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('startBtn').textContent = '🔴 Running…';
+        document.getElementById('camDot').classList.add('live');
+        document.getElementById('camStatus').textContent = 'Live ✅';
+        detectLoop();
+      } catch(err) {
+        alert('Could not access camera 📷\n' + err.message);
+      }
+    }
 
-const stream=await navigator.mediaDevices.getUserMedia({video:true})
+    let frameCount = 0;
+    async function detectLoop(){
+      if(!running) return;
 
-video.srcObject=stream
+      const canvas = document.createElement('canvas');
+      canvas.width  = video.videoWidth  || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
 
-detectLoop()
+      canvas.toBlob(async (blob) => {
+        try {
+          const formData = new FormData();
+          formData.append('file', blob, 'frame.jpg');
 
-}
+          const response = await fetch('/detect_frame', { method:'POST', body:formData });
+          const data = await response.json();
 
-async function detectLoop(){
+          document.getElementById('resultImage').src =
+            'data:image/jpeg;base64,' + hexToBase64(data.image);
 
-const canvas=document.createElement("canvas")
+          frameCount++;
+          document.getElementById('detDot').className = 'dot live';
+          document.getElementById('detStatus').textContent = 'Frame #' + frameCount + ' processed ✅';
 
-canvas.width=video.videoWidth
-canvas.height=video.videoHeight
+          // Counts
+          const countsEl = document.getElementById('counts');
+          const titleEl  = document.getElementById('countsTitle');
+          countsEl.innerHTML = '';
 
-const ctx=canvas.getContext("2d")
+          const keys = Object.keys(data.counts);
+          if(keys.length){
+            titleEl.style.display = '';
+            keys.forEach((key, i) => {
+              const badge = document.createElement('span');
+              badge.className = 'count-badge';
+              badge.setAttribute('data-emoji', emojiFor(key));
+              badge.innerHTML = ' ' + key.charAt(0).toUpperCase() + key.slice(1)
+                + ' <span class="num">' + data.counts[key] + '</span>';
+              countsEl.appendChild(badge);
+            });
+          } else {
+            titleEl.style.display = '';
+            countsEl.innerHTML = '<span class="count-badge" data-emoji="🤔"> Nothing detected</span>';
+          }
+        } catch(e) { /* skip frame */ }
 
-ctx.drawImage(video,0,0)
+        setTimeout(detectLoop, 600);
+      }, 'image/jpeg', 0.85);
+    }
 
-canvas.toBlob(async(blob)=>{
-
-const formData=new FormData()
-
-formData.append("file",blob,"frame.jpg")
-
-const response=await fetch("/detect_frame",{
-method:"POST",
-body:formData
-})
-
-const data=await response.json()
-
-document.getElementById("resultImage").src="data:image/jpeg;base64,"+hexToBase64(data.image)
-
-let text=""
-
-for(const key in data.counts){
-text+=key.toUpperCase()+" : "+data.counts[key]+"<br>"
-}
-
-document.getElementById("counts").innerHTML=text
-
-})
-
-setTimeout(detectLoop,600)
-
-}
-
-function hexToBase64(hex){
-
-let bytes=[]
-
-for(let c=0;c<hex.length;c+=2)
-bytes.push(parseInt(hex.substr(c,2),16))
-
-return btoa(String.fromCharCode.apply(null,bytes))
-
-}
-
-</script>
+    function hexToBase64(hex){
+      const bytes = [];
+      for(let c = 0; c < hex.length; c += 2)
+        bytes.push(parseInt(hex.substring(c, c + 2), 16));
+      return btoa(String.fromCharCode.apply(null, bytes));
+    }
+  </script>
 
 </body>
 </html>

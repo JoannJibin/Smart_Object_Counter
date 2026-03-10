@@ -1,77 +1,322 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-<title>UPLOAD IMAGE</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload Image 📸</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<style>
+    body {
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #ffd6e7 0%, #c8f0fe 50%, #d4f5d4 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 16px 60px;
+    }
 
-body{
-font-family:Arial;
-text-align:center;
-margin-top:80px;
-}
+    /* back link */
+    .back-link {
+      align-self: flex-start;
+      text-decoration: none;
+      color: #7c5cbf;
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 24px;
+      transition: transform 0.15s;
+    }
+    .back-link:hover { transform: translateX(-4px); }
 
-h1{
-font-size:40px;
-}
+    h1 {
+      font-size: 2.4rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, #ff6fb4, #7c5cbf);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+      text-align: center;
+    }
 
-#counts{
-font-size:25px;
-margin-top:30px;
-font-weight:bold;
-}
+    .subtitle {
+      color: #7a89a8;
+      margin-bottom: 28px;
+      font-size: 0.95rem;
+      text-align: center;
+    }
 
-</style>
+    /* Drop zone */
+    .drop-zone {
+      width: 100%;
+      max-width: 500px;
+      border: 3px dashed #c9a8f5;
+      border-radius: 24px;
+      background: rgba(255,255,255,0.65);
+      backdrop-filter: blur(10px);
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.2s;
+      position: relative;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: #9b6fd6;
+      background: rgba(255,255,255,0.85);
+      transform: scale(1.02);
+    }
 
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .drop-icon { font-size: 52px; line-height: 1; margin-bottom: 12px; display: block; }
+
+    .drop-text {
+      font-size: 1rem;
+      color: #7a6a99;
+      font-weight: 700;
+    }
+    .drop-text span { color: #9b6fd6; text-decoration: underline; }
+
+    .file-name {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: #9b6fd6;
+      min-height: 20px;
+      font-weight: 700;
+    }
+
+    /* Detect button */
+    .btn-detect {
+      margin-top: 20px;
+      padding: 16px 48px;
+      font-size: 1.05rem;
+      font-weight: 900;
+      font-family: 'Nunito', sans-serif;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ff79c6, #bd5dc9);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(189,93,201,0.4);
+      transition: transform 0.18s, box-shadow 0.18s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-detect:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 10px 28px rgba(189,93,201,0.55); }
+    .btn-detect:active { transform: scale(0.97); }
+    .btn-detect:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+    /* Spinner */
+    .spinner {
+      display: none;
+      width: 22px; height: 22px;
+      border: 3px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Result area */
+    .result-section {
+      width: 100%;
+      max-width: 500px;
+      margin-top: 32px;
+      display: none;
+      animation: fadeUp 0.5s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-img-wrap {
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 28px rgba(120,80,180,0.22);
+      margin-bottom: 20px;
+    }
+    .result-img-wrap img {
+      width: 100%;
+      display: block;
+    }
+
+    .counts-title {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: #5a4080;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .counts-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .count-badge {
+      background: linear-gradient(135deg, #fff0fa, #ede0ff);
+      border: 2px solid #d4a8f7;
+      border-radius: 50px;
+      padding: 8px 20px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #6b3fa0;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(120,80,180,0.12);
+      animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.6); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .count-badge .num {
+      background: linear-gradient(135deg, #ff79c6, #bd5dc9);
+      color: #fff;
+      border-radius: 50px;
+      padding: 2px 10px;
+      font-size: 0.88rem;
+    }
+
+    /* Emoji map for common YOLO classes */
+    .count-badge::before { content: attr(data-emoji); font-size: 1.1rem; }
+  </style>
 </head>
-
 <body>
 
-<h1>UPLOAD IMAGE</h1>
+  <a href="/" class="back-link">← Back home</a>
 
-<input type="file" id="imageUpload">
+  <h1>📸 Upload an Image</h1>
+  <p class="subtitle">Drop any photo and I'll count every object in it! 🎉</p>
 
-<br><br>
+  <div class="drop-zone" id="dropZone">
+    <input type="file" id="imageUpload" accept="image/*" onchange="onFileChange(event)" />
+    <span class="drop-icon">🖼️</span>
+    <p class="drop-text">Drag &amp; drop your image here<br>or <span>browse files</span></p>
+    <p class="file-name" id="fileName">No file chosen yet</p>
+  </div>
 
-<button onclick="uploadImage()">COUNT</button>
+  <button class="btn-detect" onclick="uploadImage()" id="detectBtn">
+    <span id="btnIcon">🔍</span>
+    <span id="btnLabel">Count Objects!</span>
+    <div class="spinner" id="spinner"></div>
+  </button>
 
-<br><br>
+  <div class="result-section" id="resultSection">
+    <div class="result-img-wrap">
+      <img id="resultImage" src="" alt="Detection result" />
+    </div>
+    <p class="counts-title">🎯 Objects found:</p>
+    <div class="counts-grid" id="counts"></div>
+  </div>
 
-<img id="resultImage" width="500">
+  <script>
+    const EMOJI_MAP = {
+      person:'🧍', bicycle:'🚲', car:'🚗', motorcycle:'🏍️', airplane:'✈️',
+      bus:'🚌', train:'🚆', truck:'🚛', boat:'⛵', 'traffic light':'🚦',
+      'fire hydrant':'🚒', 'stop sign':'🛑', 'parking meter':'🅿️', bench:'🪑',
+      bird:'🐦', cat:'🐱', dog:'🐶', horse:'🐴', sheep:'🐑', cow:'🐄',
+      elephant:'🐘', bear:'🐻', zebra:'🦓', giraffe:'🦒', backpack:'🎒',
+      umbrella:'☂️', handbag:'👜', tie:'👔', suitcase:'🧳', frisbee:'🥏',
+      skis:'🎿', snowboard:'🏂', 'sports ball':'⚽', kite:'🪁',
+      'baseball bat':'⚾', 'baseball glove':'🧤', skateboard:'🛹', surfboard:'🏄',
+      'tennis racket':'🎾', bottle:'🍾', 'wine glass':'🍷', cup:'☕',
+      fork:'🍴', knife:'🔪', spoon:'🥄', bowl:'🥣', banana:'🍌', apple:'🍎',
+      sandwich:'🥪', orange:'🍊', broccoli:'🥦', carrot:'🥕', 'hot dog':'🌭',
+      pizza:'🍕', donut:'🍩', cake:'🎂', chair:'🪑', couch:'🛋️',
+      'potted plant':'🪴', bed:'🛏️', 'dining table':'🍽️', toilet:'🚽',
+      tv:'📺', laptop:'💻', mouse:'🖱️', remote:'📻', keyboard:'⌨️',
+      'cell phone':'📱', microwave:'📦', oven:'🍳', toaster:'🍞', sink:'🚿',
+      refrigerator:'🧊', book:'📚', clock:'🕐', vase:'🏺', scissors:'✂️',
+      'teddy bear':'🧸', 'hair drier':'💨', toothbrush:'🪥'
+    };
 
-<div id="counts"></div>
+    function emojiFor(name){ return EMOJI_MAP[name.toLowerCase()] || '📦'; }
 
-<script>
+    const dropZone = document.getElementById('dropZone');
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if(file){ document.getElementById('imageUpload').files = e.dataTransfer.files; onFileChange({target:{files:[file]}}); }
+    });
 
-async function uploadImage(){
+    function onFileChange(e){
+      const file = e.target.files[0];
+      document.getElementById('fileName').textContent = file ? '✅ ' + file.name : 'No file chosen yet';
+    }
 
-const fileInput=document.getElementById("imageUpload")
+    async function uploadImage(){
+      const fileInput = document.getElementById('imageUpload');
+      if(!fileInput.files[0]){ alert('Please pick an image first! 🖼️'); return; }
 
-const formData=new FormData()
+      const btn = document.getElementById('detectBtn');
+      btn.disabled = true;
+      document.getElementById('btnIcon').style.display = 'none';
+      document.getElementById('btnLabel').textContent = 'Counting…';
+      document.getElementById('spinner').style.display = 'block';
 
-formData.append("file",fileInput.files[0])
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
 
-const response=await fetch("/detect",{
-method:"POST",
-body:formData
-})
+      try {
+        const response = await fetch('/detect', { method:'POST', body:formData });
+        const data = await response.json();
 
-const data=await response.json()
+        document.getElementById('resultImage').src = data.image;
+        document.getElementById('resultSection').style.display = 'block';
 
-document.getElementById("resultImage").src=data.image
+        const countsEl = document.getElementById('counts');
+        countsEl.innerHTML = '';
+        for(const key in data.counts){
+          const emoji = emojiFor(key);
+          const badge = document.createElement('span');
+          badge.className = 'count-badge';
+          badge.setAttribute('data-emoji', emoji);
+          badge.innerHTML = ' ' + key.charAt(0).toUpperCase() + key.slice(1)
+            + ' <span class="num">' + data.counts[key] + '</span>';
+          badge.style.animationDelay = Object.keys(data.counts).indexOf(key) * 0.07 + 's';
+          countsEl.appendChild(badge);
+        }
 
-let text=""
+        if(Object.keys(data.counts).length === 0){
+          countsEl.innerHTML = '<span class="count-badge" data-emoji="🤔"> Nothing detected</span>';
+        }
 
-for(const key in data.counts){
-text+=key.toUpperCase()+" : "+data.counts[key]+"<br>"
-}
-
-document.getElementById("counts").innerHTML=text
-
-}
-
-</script>
+        document.getElementById('resultSection').scrollIntoView({ behavior:'smooth', block:'start' });
+      } catch(err) {
+        alert('Oops! Something went wrong 😢');
+      } finally {
+        btn.disabled = false;
+        document.getElementById('btnIcon').style.display = '';
+        document.getElementById('btnLabel').textContent = 'Count Objects!';
+        document.getElementById('spinner').style.display = 'none';
+      }
+    }
+  </script>
 
 </body>
 </html>
