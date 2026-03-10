@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>UPLOAD IMAGE</title>
+
+<style>
+
+body{
+font-family:Arial;
+text-align:center;
+margin-top:80px;
+}
+
+h1{
+font-size:40px;
+}
+
+#counts{
+font-size:25px;
+margin-top:30px;
+font-weight:bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>UPLOAD IMAGE</h1>
+
+<input type="file" id="imageUpload">
+
+<br><br>
+
+<button onclick="uploadImage()">COUNT</button>
+
+<br><br>
+
+<img id="resultImage" width="500">
+
+<div id="counts"></div>
+
+<script>
+
+async function uploadImage(){
+
+const fileInput=document.getElementById("imageUpload")
+
+const formData=new FormData()
+
+formData.append("file",fileInput.files[0])
+
+const response=await fetch("/detect",{
+method:"POST",
+body:formData
+})
+
+const data=await response.json()
+
+document.getElementById("resultImage").src=data.image
+
+let text=""
+
+for(const key in data.counts){
+text+=key.toUpperCase()+" : "+data.counts[key]+"<br>"
+}
+
+document.getElementById("counts").innerHTML=text
+
+}
+
+</script>
+
+</body>
+</html>

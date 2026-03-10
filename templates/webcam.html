@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>WEBCAM DETECTION</title>
+
+<style>
+
+body{
+text-align:center;
+font-family:Arial;
+margin-top:40px;
+}
+
+#counts{
+font-size:25px;
+font-weight:bold;
+margin-top:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>WEBCAM</h1>
+
+<video id="webcam" width="500" autoplay></video>
+
+<br><br>
+
+<button onclick="startWebcam()">START</button>
+
+<br><br>
+
+<img id="resultImage" width="500">
+
+<div id="counts"></div>
+
+<script>
+
+const video=document.getElementById("webcam")
+
+async function startWebcam(){
+
+const stream=await navigator.mediaDevices.getUserMedia({video:true})
+
+video.srcObject=stream
+
+detectLoop()
+
+}
+
+async function detectLoop(){
+
+const canvas=document.createElement("canvas")
+
+canvas.width=video.videoWidth
+canvas.height=video.videoHeight
+
+const ctx=canvas.getContext("2d")
+
+ctx.drawImage(video,0,0)
+
+canvas.toBlob(async(blob)=>{
+
+const formData=new FormData()
+
+formData.append("file",blob,"frame.jpg")
+
+const response=await fetch("/detect_frame",{
+method:"POST",
+body:formData
+})
+
+const data=await response.json()
+
+document.getElementById("resultImage").src="data:image/jpeg;base64,"+hexToBase64(data.image)
+
+let text=""
+
+for(const key in data.counts){
+text+=key.toUpperCase()+" : "+data.counts[key]+"<br>"
+}
+
+document.getElementById("counts").innerHTML=text
+
+})
+
+setTimeout(detectLoop,600)
+
+}
+
+function hexToBase64(hex){
+
+let bytes=[]
+
+for(let c=0;c<hex.length;c+=2)
+bytes.push(parseInt(hex.substr(c,2),16))
+
+return btoa(String.fromCharCode.apply(null,bytes))
+
+}
+
+</script>
+
+</body>
+</html>
